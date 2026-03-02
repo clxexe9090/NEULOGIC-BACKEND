@@ -9,21 +9,20 @@ CORS(app)
 # ==============================
 # Health Check
 # ==============================
-@app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify({
-        "status": "NeuroLab Backend Running "
+        "status": "NeuroLab Backend Running 🚀"
     })
 
 
 # ==============================
 # Receive IoT Data
 # ==============================
-@app.route("/api/v1/data", methods=["POST"])
+@app.route("/v1/data", methods=["POST"])
 def receive_data():
     try:
         supabase = get_supabase()
-
         payload = request.get_json()
 
         if not payload:
@@ -41,32 +40,22 @@ def receive_data():
         accel = float(payload["accel"])
         timestamp = int(time.time())
 
-        # ==============================
-        # Normalization (basic)
-        # ==============================
+        # Normalization
         gsr_norm = min(max(gsr, 0), 1)
         sound_norm = min(max(sound, 0), 1)
         accel_norm = min(max(accel, 0), 1)
 
-        # ==============================
-        # Stress Index Calculation
-        # ==============================
+        # Stress index
         stress_index = (
             0.4 * gsr_norm +
             0.3 * sound_norm +
             0.3 * accel_norm
         )
 
-        # ==============================
-        # Crisis Detection
-        # ==============================
         alert = None
         if stress_index > 0.7:
             alert = "Possible overstimulation detected"
 
-        # ==============================
-        # Insert into Database
-        # ==============================
         insert_data = {
             "device_id": device_id,
             "gsr": gsr_norm,
@@ -76,7 +65,7 @@ def receive_data():
             "timestamp": timestamp
         }
 
-        response = supabase.table("sensor_data").insert(insert_data).execute()
+        supabase.table("sensor_data").insert(insert_data).execute()
 
         return jsonify({
             "status": "Data stored",
@@ -85,10 +74,8 @@ def receive_data():
         })
 
     except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return jsonify({"error": str(e)}), 500
 
 
-# Export for Vercel
+# 🔥 CRÍTICO PARA VERCEL
 handler = app
